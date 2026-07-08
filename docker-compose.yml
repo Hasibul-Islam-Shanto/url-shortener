@@ -1,0 +1,61 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: url_shortener_mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=url_shortener
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - url_shortener_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: url_shortener_backend
+    restart: unless-stopped
+    environment:
+      - PORT=8000
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongo:27017/url-shortener
+      - JWT_SECRET=changeme
+      - JWT_EXPIRES_IN=7d
+      - COOKIE_NAME=token
+      - CLIENT_URL=http://localhost:3001
+      - BASE_URL=http://localhost:8000
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX=100
+      - AUTH_RATE_LIMIT_MAX=10
+      - SHORT_CODE_LENGTH=7
+      - TRUST_PROXY=true
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+    networks:
+      - url_shortener_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ""
+        VITE_PUBLIC_BASE_URL: http://localhost:8000
+    container_name: url_shortener_frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+    networks:
+      - url_shortener_net
+
+volumes:
+  mongo-data:
+
+networks:
+  url_shortener_net:
+    driver: bridge

@@ -1,0 +1,7 @@
+# Covered by root .gitignore; kept for tooling that reads this directory in isolation
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

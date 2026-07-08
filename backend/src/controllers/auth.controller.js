@@ -1,0 +1,32 @@
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { getCookieOptions } from '../utils/cookieOptions.js';
+import { env } from '../config/env.js';
+import * as authService from '../services/auth.service.js';
+
+export const register = asyncHandler(async (req, res) => {
+  const { user, token } = await authService.registerUser(req.body);
+  res.cookie(env.cookieName, token, getCookieOptions());
+  res.status(201).json(new ApiResponse({ user }, 'Registered successfully'));
+});
+
+export const login = asyncHandler(async (req, res) => {
+  const { user, token } = await authService.loginUser(req.body);
+  res.cookie(env.cookieName, token, getCookieOptions());
+  res.status(200).json(new ApiResponse({ user }, 'Logged in successfully'));
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  res.clearCookie(env.cookieName, getCookieOptions());
+  res.status(200).json(new ApiResponse(null, 'Logged out successfully'));
+});
+
+export const getMe = asyncHandler(async (req, res) => {
+  const user = await authService.getProfile(req.user._id);
+  res.status(200).json(new ApiResponse({ user }));
+});
+
+export const updateProfile = asyncHandler(async (req, res) => {
+  const user = await authService.updateProfile(req.user._id, req.body);
+  res.status(200).json(new ApiResponse({ user }, 'Profile updated successfully'));
+});
