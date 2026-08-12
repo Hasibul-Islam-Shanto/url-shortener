@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Menu, Moon, Sun, LogOut, User as UserIcon, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@/store/AuthContext';
-import { useTheme } from '@/store/ThemeContext';
+import { useAuth } from '@/store/useAuth';
+import { useTheme } from '@/store/useTheme';
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown';
 import { Button } from '@/components/ui/Button';
 

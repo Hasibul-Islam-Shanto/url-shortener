@@ -22,11 +22,11 @@ export const logout = asyncHandler(async (req, res) => {
 });
 
 export const getMe = asyncHandler(async (req, res) => {
-  const user = await authService.getProfile(req.user._id);
+  const user = await authService.getProfile(req.user!._id.toString());
   res.status(200).json(new ApiResponse({ user }));
 });
 
 export const updateProfile = asyncHandler(async (req, res) => {
-  const user = await authService.updateProfile(req.user._id, req.body);
+  const user = await authService.updateProfile(req.user!._id.toString(), req.body);
   res.status(200).json(new ApiResponse({ user }, 'Profile updated successfully'));
 });

@@ -20,7 +20,7 @@ services:
       - PORT=8000
       - NODE_ENV=development
       - MONGODB_URI=mongodb://mongo:27017/url-shortener
-      - JWT_SECRET=changeme
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET before running docker compose}
       - JWT_EXPIRES_IN=7d
       - COOKIE_NAME=token
       - CLIENT_URL=http://localhost:3001
@@ -29,7 +29,7 @@ services:
       - RATE_LIMIT_MAX=100
       - AUTH_RATE_LIMIT_MAX=10
       - SHORT_CODE_LENGTH=7
-      - TRUST_PROXY=true
+      - TRUST_PROXY=false
     ports:
       - "8000:8000"
     depends_on:

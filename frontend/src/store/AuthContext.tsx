@@ -1,20 +1,9 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useMeQuery } from '@/features/auth/api/useMeQuery';
 import { useLoginMutation } from '@/features/auth/api/useLoginMutation';
 import { useRegisterMutation } from '@/features/auth/api/useRegisterMutation';
 import { useLogoutMutation } from '@/features/auth/api/useLogoutMutation';
-import type { LoginPayload, RegisterPayload, User } from '@/features/auth/types';
-
-interface AuthContextValue {
-  user: User | null;
-  isLoading: boolean;
-  login: (payload: LoginPayload) => Promise<User>;
-  register: (payload: RegisterPayload) => Promise<User>;
-  logout: () => Promise<void>;
-  isAuthenticating: boolean;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext, type AuthContextValue } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const meQuery = useMeQuery();
@@ -42,10 +31,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
-  return ctx;
 }

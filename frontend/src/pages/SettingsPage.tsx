@@ -1,7 +1,7 @@
 import { Moon, Sun } from 'lucide-react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { useTheme } from '@/store/ThemeContext';
+import { useTheme } from '@/store/useTheme';
 
 export function SettingsPage() {
   const { theme, toggleTheme } = useTheme();

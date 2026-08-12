@@ -1,7 +1,8 @@
 import { ApiError } from '../utils/ApiError.js';
 import { env } from '../config/env.js';
+import type { ErrorRequestHandler } from 'express';
 
-export function errorHandler(err, _req, res, _next) {
+export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   let statusCode = err instanceof ApiError ? err.statusCode : 500;
   let message = err.message || 'Internal server error';
   let errors = err instanceof ApiError ? err.errors : [];
@@ -20,7 +21,10 @@ export function errorHandler(err, _req, res, _next) {
   if (err.name === 'ValidationError' && err.errors) {
     statusCode = 400;
     message = 'Validation failed';
-    errors = Object.values(err.errors).map((e) => ({ field: e.path, message: e.message }));
+    errors = Object.values(err.errors).map((e) => {
+      const validationError = e as { path: string; message: string };
+      return { field: validationError.path, message: validationError.message };
+    });
   }
 
   if (!err.isOperational && statusCode === 500) {
@@ -33,4 +37,4 @@ export function errorHandler(err, _req, res, _next) {
     ...(errors.length > 0 && { errors }),
     ...(env.nodeEnv === 'development' && statusCode === 500 && { stack: err.stack }),
   });
-}
+};

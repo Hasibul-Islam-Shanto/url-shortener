@@ -1,5 +1,9 @@
 export class ApiError extends Error {
-  constructor(statusCode, message, errors = []) {
+  statusCode: number;
+  errors: Array<{ field?: string; message: string }>;
+  isOperational: boolean;
+
+  constructor(statusCode: number, message: string, errors: Array<{ field?: string; message: string }> = []) {
     super(message);
     this.name = 'ApiError';
     this.statusCode = statusCode;

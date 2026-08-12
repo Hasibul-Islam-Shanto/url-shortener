@@ -1,7 +1,7 @@
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useTheme } from '@/store/ThemeContext';
+import { useTheme } from '@/store/useTheme';
 import type { AnalyticsCount } from '../types';
 
 interface DistributionChartProps {

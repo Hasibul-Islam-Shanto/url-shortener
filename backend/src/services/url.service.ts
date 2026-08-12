@@ -3,10 +3,32 @@ import { Analytics } from '../models/analytics.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { generateShortCode } from '../utils/shortCode.js';
 import { escapeRegex } from '../utils/escapeRegex.js';
+import type { FilterQuery } from 'mongoose';
+import type { UrlAttrs } from '../models/url.model.js';
 
 const MAX_GENERATION_ATTEMPTS = 5;
 
-export async function createShortUrl(userId, { originalUrl, shortCode, expiresAt }) {
+interface CreateShortUrlInput {
+  originalUrl: string;
+  shortCode?: string;
+  expiresAt?: Date;
+}
+
+interface ListUrlsInput {
+  page: number;
+  limit: number;
+  sort: string;
+  status?: 'active' | 'disabled' | 'expired';
+  search?: string;
+}
+
+interface UpdateUrlInput {
+  originalUrl?: string;
+  isActive?: boolean;
+  expiresAt?: Date | null;
+}
+
+export async function createShortUrl(userId: string, { originalUrl, shortCode, expiresAt }: CreateShortUrlInput) {
   let code = shortCode;
 
   if (code) {
@@ -37,10 +59,10 @@ export async function createShortUrl(userId, { originalUrl, shortCode, expiresAt
   });
 }
 
-export async function listUrls(userId, { page, limit, sort, status, search }) {
+export async function listUrls(userId: string, { page, limit, sort, status, search }: ListUrlsInput) {
   const now = new Date();
-  const filter = { user: userId };
-  const andConditions = [];
+  const filter: FilterQuery<UrlAttrs> = { user: userId };
+  const andConditions: FilterQuery<UrlAttrs>[] = [];
 
   if (status === 'disabled') {
     filter.isActive = false;
@@ -62,7 +84,7 @@ export async function listUrls(userId, { page, limit, sort, status, search }) {
   }
 
   const [sortField, sortDir] = sort.split(':');
-  const sortObj = { [sortField]: sortDir === 'asc' ? 1 : -1 };
+  const sortObj: Record<string, 1 | -1> = { [sortField]: sortDir === 'asc' ? 1 : -1 };
 
   const [urls, total] = await Promise.all([
     Url.find(filter)
@@ -83,7 +105,7 @@ export async function listUrls(userId, { page, limit, sort, status, search }) {
   };
 }
 
-export async function getUrlById(userId, urlId) {
+export async function getUrlById(userId: string, urlId: string) {
   const url = await Url.findOne({ _id: urlId, user: userId });
   if (!url) {
     throw new ApiError(404, 'URL not found');
@@ -91,7 +113,7 @@ export async function getUrlById(userId, urlId) {
   return url;
 }
 
-export async function updateUrl(userId, urlId, { originalUrl, isActive, expiresAt }) {
+export async function updateUrl(userId: string, urlId: string, { originalUrl, isActive, expiresAt }: UpdateUrlInput) {
   const url = await getUrlById(userId, urlId);
 
   if (originalUrl !== undefined) url.originalUrl = originalUrl;
@@ -102,7 +124,7 @@ export async function updateUrl(userId, urlId, { originalUrl, isActive, expiresA
   return url;
 }
 
-export async function deleteUrl(userId, urlId) {
+export async function deleteUrl(userId: string, urlId: string) {
   const url = await getUrlById(userId, urlId);
   await Analytics.deleteMany({ url: url._id });
   await url.deleteOne();

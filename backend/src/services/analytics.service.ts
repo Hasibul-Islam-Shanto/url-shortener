@@ -3,7 +3,18 @@ import { Analytics } from '../models/analytics.model.js';
 import { parseUserAgent } from '../lib/uaParser.js';
 import { getUrlById } from './url.service.js';
 
-export async function recordVisit(urlId, { userAgent, ip, referrer }) {
+interface RequestMetadata {
+  userAgent?: string;
+  ip?: string;
+  referrer?: string;
+}
+
+interface PaginationInput {
+  page: number;
+  limit: number;
+}
+
+export async function recordVisit(urlId: string, { userAgent, ip, referrer }: RequestMetadata) {
   const { browser, operatingSystem, device } = parseUserAgent(userAgent);
 
   await Analytics.create({
@@ -16,7 +27,7 @@ export async function recordVisit(urlId, { userAgent, ip, referrer }) {
   });
 }
 
-export async function getUrlAnalytics(userId, urlId, { page, limit }) {
+export async function getUrlAnalytics(userId: string, urlId: string, { page, limit }: PaginationInput) {
   await getUrlById(userId, urlId);
 
   const [facetResult, recentVisits, total] = await Promise.all([

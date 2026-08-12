@@ -8,20 +8,28 @@ const shortCodeSchema = z
   .max(30)
   .regex(/^[a-zA-Z0-9_-]+$/, 'Short code may only contain letters, numbers, hyphens, and underscores');
 
+const httpUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .refine((value) => ['http:', 'https:'].includes(new URL(value).protocol), {
+    message: 'URL must use http or https',
+  });
+
 const futureDateSchema = z
   .coerce
   .date()
   .refine((date) => date.getTime() > Date.now(), { message: 'expiresAt must be a future date' });
 
 export const createUrlSchema = z.object({
-  originalUrl: z.string().trim().url(),
+  originalUrl: httpUrlSchema,
   shortCode: shortCodeSchema.optional(),
   expiresAt: futureDateSchema.optional(),
 });
 
 export const updateUrlSchema = z
   .object({
-    originalUrl: z.string().trim().url().optional(),
+    originalUrl: httpUrlSchema.optional(),
     isActive: z.boolean().optional(),
     expiresAt: futureDateSchema.nullable().optional(),
   })
