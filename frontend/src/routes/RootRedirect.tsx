@@ -7,5 +7,5 @@ export function RootRedirect() {
 
   if (isLoading) return <LoadingSpinner fullPage />;
 
-  return <Navigate to={user ? '/dashboard' : '/login'} replace />;
+  return <Navigate to={user ? '/urls' : '/login'} replace />;
 }

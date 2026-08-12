@@ -26,8 +26,8 @@ export function UrlAnalyticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Analytics</h1>
-        {url && <p className="mt-1 truncate text-sm text-gray-500 dark:text-gray-400">{url.originalUrl}</p>}
+        <h1 className="text-xl font-semibold text-slate-100">Analytics</h1>
+        {url && <p className="mt-1 truncate text-sm text-slate-400">{url.originalUrl}</p>}
       </div>
 
       <ClicksSummaryCard total={data.summary.total} />
@@ -39,7 +39,7 @@ export function UrlAnalyticsPage() {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Recent visits</h2>
+        <h2 className="text-sm font-semibold text-slate-100">Recent visits</h2>
         <RecentVisitsTable visits={data.recentVisits} />
         <Pagination
           page={data.pagination.page}

@@ -25,7 +25,7 @@ export function LoginForm() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       await login(values);
-      const from = (location.state as { from?: Location })?.from?.pathname ?? '/dashboard';
+      const from = (location.state as { from?: Location })?.from?.pathname ?? '/urls';
       navigate(from, { replace: true });
     } catch (error) {
       applyServerErrors(setError, error as NormalizedApiError);

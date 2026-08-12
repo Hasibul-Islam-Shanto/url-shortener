@@ -1,11 +1,45 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 }
 
 body {
-  @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+  @apply bg-bg-base font-sans text-slate-100 antialiased;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes copy-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+@utility animate-copy-pulse {
+  animation: copy-pulse 0.3s ease-in-out;
+}
+
+@utility glass-panel {
+  @apply rounded-2xl border border-glass-border bg-glass shadow-glowCard backdrop-blur-lg;
 }

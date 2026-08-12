@@ -20,24 +20,31 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     <>
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
+
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 transform border-r border-gray-200 bg-white transition-transform dark:border-gray-800 dark:bg-gray-900 md:static md:translate-x-0',
-          open ? 'translate-x-0' : '-translate-x-full'
+          'z-40 w-64 shrink-0 rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-lg shadow-glass transition-transform duration-200',
+          'fixed inset-y-4 left-4 md:static md:inset-auto md:translate-x-0',
+          open ? 'translate-x-0' : '-translate-x-[calc(100%+2rem)] md:translate-x-0'
         )}
       >
-        <div className="flex h-14 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-800 md:hidden">
-          <span className="font-semibold text-gray-900 dark:text-gray-100">Menu</span>
-          <button onClick={onClose} aria-label="Close menu" className="text-gray-500">
+        <div className="mb-3 flex items-center justify-between md:hidden">
+          <span className="font-semibold text-gray-100">Menu</span>
+          <button
+            onClick={onClose}
+            aria-label="Close menu"
+            className="rounded-xl p-1.5 text-slate-400 transition-all duration-200 hover:bg-white/5"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="space-y-1 p-3">
+
+        <nav className="space-y-1">
           {links.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -46,14 +53,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               onClick={onClose}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400'
-                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                    ? 'border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 shadow-glow'
+                    : 'text-slate-300 hover:bg-white/5'
                 )
               }
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4 w-4 shrink-0" />
               {label}
             </NavLink>
           ))}

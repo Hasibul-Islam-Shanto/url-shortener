@@ -1,24 +1,18 @@
-import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { AmbientBackground } from '@/components/layout/AmbientBackground';
 import { Navbar } from '@/components/layout/Navbar';
-import { Sidebar } from '@/components/layout/Sidebar';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { Outlet } from 'react-router-dom';
 
 export function AppLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   useKeyboardShortcuts();
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex flex-1 flex-col md:pl-0">
-        <Navbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6">
-          <div className="mx-auto max-w-6xl">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+    <div className="relative min-h-screen bg-bg-base">
+      <AmbientBackground />
+      <Navbar />
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+        <Outlet />
+      </main>
     </div>
   );
 }

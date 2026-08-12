@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { PublicLayout } from '@/layouts/PublicLayout';
 import { AppLayout } from '@/layouts/AppLayout';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -6,9 +6,7 @@ import { PublicOnlyRoute } from './PublicOnlyRoute';
 import { RootRedirect } from './RootRedirect';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
-import { DashboardPage } from '@/pages/DashboardPage';
 import { UrlsListPage } from '@/pages/UrlsListPage';
-import { UrlCreatePage } from '@/pages/UrlCreatePage';
 import { UrlEditPage } from '@/pages/UrlEditPage';
 import { UrlDetailsPage } from '@/pages/UrlDetailsPage';
 import { UrlAnalyticsPage } from '@/pages/UrlAnalyticsPage';
@@ -36,9 +34,9 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { path: '/dashboard', element: <DashboardPage /> },
+          { path: '/dashboard', element: <Navigate to="/urls" replace /> },
           { path: '/urls', element: <UrlsListPage /> },
-          { path: '/urls/new', element: <UrlCreatePage /> },
+          { path: '/urls/new', element: <Navigate to="/urls" replace /> },
           { path: '/urls/:id', element: <UrlDetailsPage /> },
           { path: '/urls/:id/edit', element: <UrlEditPage /> },
           { path: '/urls/:id/analytics', element: <UrlAnalyticsPage /> },

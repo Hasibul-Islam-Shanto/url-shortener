@@ -7,7 +7,7 @@ interface LoadingSpinnerProps {
 }
 
 export function LoadingSpinner({ className, fullPage }: LoadingSpinnerProps) {
-  const spinner = <Loader2 className={cn('h-6 w-6 animate-spin text-indigo-600 dark:text-indigo-400', className)} />;
+  const spinner = <Loader2 className={cn('h-6 w-6 animate-spin text-accent-start', className)} />;
 
   if (fullPage) {
     return <div className="flex min-h-[50vh] items-center justify-center">{spinner}</div>;

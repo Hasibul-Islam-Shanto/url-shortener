@@ -21,13 +21,18 @@ export function useKeyboardShortcuts() {
           navigate('/urls');
         }
         requestAnimationFrame(() => {
-          document.getElementById('urls-search-input')?.focus();
+          document.getElementById('recent-links-search-input')?.focus();
         });
       }
 
       if (event.key === 'n') {
         event.preventDefault();
-        navigate('/urls/new');
+        if (location.pathname !== '/urls') {
+          navigate('/urls');
+        }
+        requestAnimationFrame(() => {
+          document.getElementById('shorten-original-url')?.focus();
+        });
       }
     }
 

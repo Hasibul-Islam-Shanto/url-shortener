@@ -5,18 +5,18 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-start/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
         primary:
-          'bg-indigo-600 text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400',
+          'bg-gradient-to-r from-accent-start to-accent-end text-white shadow-glow hover:scale-[1.02] hover:shadow-lg',
         secondary:
-          'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700',
+          'border border-glass-border bg-glass text-slate-100 backdrop-blur-sm hover:bg-white/[0.08] hover:shadow-glowSm',
         outline:
-          'border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800',
-        ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800',
-        destructive: 'bg-red-600 text-white hover:bg-red-500 dark:bg-red-500 dark:hover:bg-red-400',
+          'border border-glass-border bg-glass text-slate-200 backdrop-blur-sm hover:bg-white/[0.08] hover:shadow-glowSm',
+        ghost: 'bg-transparent text-slate-200 hover:bg-white/[0.08] hover:shadow-glowSm',
+        destructive: 'bg-red-600 text-white hover:bg-red-500',
       },
       size: {
         sm: 'h-8 px-3',

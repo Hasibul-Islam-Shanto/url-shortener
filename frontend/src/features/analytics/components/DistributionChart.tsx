@@ -1,7 +1,8 @@
+import { useId } from 'react';
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useTheme } from '@/store/useTheme';
+import { designTokens } from '@/utils/designTokens';
 import type { AnalyticsCount } from '../types';
 
 interface DistributionChartProps {
@@ -9,14 +10,8 @@ interface DistributionChartProps {
   data: AnalyticsCount[];
 }
 
-const TOKENS = {
-  light: { bar: '#2a78d6', grid: '#e1e0d9', ink: '#898781' },
-  dark: { bar: '#3987e5', grid: '#2c2c2a', ink: '#898781' },
-};
-
 export function DistributionChart({ title, data }: DistributionChartProps) {
-  const { theme } = useTheme();
-  const tokens = TOKENS[theme];
+  const gradientId = `accentBarGradient-${useId().replace(/:/g, '')}`;
   const chartData = data.map((d) => ({ name: d._id ?? 'Unknown', value: d.count }));
 
   return (
@@ -30,15 +25,27 @@ export function DistributionChart({ title, data }: DistributionChartProps) {
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 24 }} barSize={20}>
-            <CartesianGrid stroke={tokens.grid} horizontal={false} />
-            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: tokens.ink }} />
-            <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 12, fill: tokens.ink }} />
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor={designTokens.accentStart} />
+                <stop offset="100%" stopColor={designTokens.accentEnd} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke={designTokens.chartGrid} horizontal={false} />
+            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: designTokens.chartInk }} />
+            <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 12, fill: designTokens.chartInk }} />
             <Tooltip
-              contentStyle={{ borderRadius: 8, fontSize: 12 }}
-              cursor={{ fill: tokens.bar, fillOpacity: 0.08 }}
+              contentStyle={{
+                borderRadius: 12,
+                fontSize: 12,
+                backgroundColor: designTokens.bgBase,
+                border: `1px solid ${designTokens.glassBorder}`,
+                color: '#f1f5f9',
+              }}
+              cursor={{ fill: designTokens.accentStart, fillOpacity: 0.08 }}
             />
-            <Bar dataKey="value" fill={tokens.bar} radius={[0, 4, 4, 0]}>
-              <LabelList dataKey="value" position="right" style={{ fill: tokens.ink, fontSize: 12 }} />
+            <Bar dataKey="value" fill={`url(#${gradientId})`} radius={[0, 4, 4, 0]}>
+              <LabelList dataKey="value" position="right" style={{ fill: designTokens.chartInk, fontSize: 12 }} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

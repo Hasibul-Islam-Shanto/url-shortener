@@ -11,10 +11,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <input
         ref={ref}
         className={cn(
-          'h-10 w-full rounded-md border bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500',
+          'h-10 w-full rounded-xl border bg-glass px-3 text-sm text-slate-100 backdrop-blur-md placeholder:text-slate-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-start/50 focus:shadow-glowSm disabled:cursor-not-allowed disabled:opacity-50',
           invalid
-            ? 'border-red-500 focus:ring-red-500'
-            : 'border-gray-300 dark:border-gray-700',
+            ? 'border-red-500/70 focus:ring-red-400/50'
+            : 'border-glass-border',
           className
         )}
         {...props}

@@ -24,7 +24,7 @@ export function RegisterForm() {
   const onSubmit = async (values: RegisterFormValues) => {
     try {
       await registerUser(values);
-      navigate('/dashboard', { replace: true });
+      navigate('/urls', { replace: true });
     } catch (error) {
       const normalized = error as NormalizedApiError;
       if (normalized.statusCode === 409) {

@@ -6,7 +6,7 @@ export function UrlTable({ urls }: { urls: Url[] }) {
   return (
     <Table>
       <TableHead>
-        <TableRow>
+        <TableRow className="hover:bg-transparent hover:shadow-none">
           <TableHeaderCell>Original URL</TableHeaderCell>
           <TableHeaderCell>Short URL</TableHeaderCell>
           <TableHeaderCell>Clicks</TableHeaderCell>

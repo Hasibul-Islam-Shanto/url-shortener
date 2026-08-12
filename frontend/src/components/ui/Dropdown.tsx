@@ -16,7 +16,7 @@ export function Dropdown({ trigger, children, align = 'end' }: DropdownProps) {
         <DropdownMenu.Content
           align={align}
           sideOffset={4}
-          className="z-50 min-w-[10rem] rounded-md border border-gray-200 bg-white p-1 shadow-md dark:border-gray-800 dark:bg-gray-900"
+          className="z-50 min-w-[10rem] rounded-2xl border border-glass-border bg-bg-base/95 p-1 shadow-glowCard backdrop-blur-lg"
         >
           {children}
         </DropdownMenu.Content>
@@ -38,10 +38,10 @@ export function DropdownItem({ onSelect, children, destructive, disabled }: Drop
       onSelect={onSelect}
       disabled={disabled}
       className={cn(
-        'flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-sm outline-none transition-all duration-200 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         destructive
-          ? 'text-red-600 focus:bg-red-50 dark:text-red-400 dark:focus:bg-red-900/30'
-          : 'text-gray-700 focus:bg-gray-100 dark:text-gray-200 dark:focus:bg-gray-800'
+          ? 'text-red-400 focus:bg-red-900/30'
+          : 'text-slate-200 focus:bg-white/[0.08] focus:shadow-glowSm'
       )}
     >
       {children}

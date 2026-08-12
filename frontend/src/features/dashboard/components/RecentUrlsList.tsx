@@ -15,10 +15,18 @@ export function RecentUrlsList({ urls }: { urls: Url[] }) {
       {urls.length === 0 && <EmptyState title="No URLs yet" description="Your recent links will appear here." />}
 
       {urls.length > 0 && (
-        <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-          {urls.map((url) => (
-            <li key={url._id} className="flex items-center justify-between gap-3 py-3 text-sm first:pt-0 last:pb-0">
-              <Link to={`/urls/${url._id}`} className="max-w-[14rem] truncate hover:underline" title={url.originalUrl}>
+        <ul className="space-y-2">
+          {urls.map((url, index) => (
+            <li
+              key={url._id}
+              className="animate-fade-in-up flex items-center justify-between gap-3 rounded-2xl border border-white/30 bg-white/30 px-3 py-3 text-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/40 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+              style={{ animationDelay: `${index * 60}ms` }}
+            >
+              <Link
+                to={`/urls/${url._id}`}
+                className="max-w-[14rem] truncate text-indigo-600 transition-colors duration-200 hover:underline dark:text-indigo-400"
+                title={url.originalUrl}
+              >
                 {url.originalUrl}
               </Link>
               <div className="flex items-center gap-3">

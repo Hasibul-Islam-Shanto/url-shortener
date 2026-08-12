@@ -3,7 +3,7 @@ import { cn } from '@/utils/cn';
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+    <div className="glass-panel overflow-x-auto">
       <table className={cn('w-full text-left text-sm', className)} {...props} />
     </div>
   );
@@ -12,23 +12,29 @@ export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>)
 export function TableHead({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <thead
-      className={cn('bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400', className)}
+      className={cn(
+        'border-b border-glass-border bg-white/[0.03] text-xs uppercase tracking-wide text-slate-400',
+        className
+      )}
       {...props}
     />
   );
 }
 
 export function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return (
-    <tbody
-      className={cn('divide-y divide-gray-100 dark:divide-gray-800', className)}
-      {...props}
-    />
-  );
+  return <tbody className={cn(className)} {...props} />;
 }
 
 export function TableRow({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn('hover:bg-gray-50 dark:hover:bg-gray-800/40', className)} {...props} />;
+  return (
+    <tr
+      className={cn(
+        'border-b border-white/5 transition-all duration-200 last:border-b-0 hover:bg-white/[0.08] hover:shadow-glowSm',
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 export function TableHeaderCell({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
@@ -36,5 +42,5 @@ export function TableHeaderCell({ className, ...props }: ThHTMLAttributes<HTMLTa
 }
 
 export function TableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn('px-4 py-3 text-gray-700 dark:text-gray-300', className)} {...props} />;
+  return <td className={cn('px-4 py-3 text-slate-300', className)} {...props} />;
 }

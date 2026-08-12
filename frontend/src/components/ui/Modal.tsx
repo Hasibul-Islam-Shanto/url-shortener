@@ -16,28 +16,24 @@ export function Modal({ open, onOpenChange, title, description, children, classN
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
         <Dialog.Content
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg focus:outline-none dark:bg-gray-900',
+            'glass-panel fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 p-6 shadow-glowSm focus:outline-none',
             className
           )}
         >
           <div className="mb-4 flex items-start justify-between">
             <div>
-              <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {title}
-              </Dialog.Title>
+              <Dialog.Title className="text-lg font-semibold text-slate-100">{title}</Dialog.Title>
               {description && (
-                <Dialog.Description className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {description}
-                </Dialog.Description>
+                <Dialog.Description className="mt-1 text-sm text-slate-400">{description}</Dialog.Description>
               )}
             </div>
             <Dialog.Close asChild>
               <button
                 aria-label="Close"
-                className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+                className="rounded-xl p-1 text-slate-400 transition-all duration-200 hover:bg-white/[0.08] hover:text-slate-200"
               >
                 <X className="h-4 w-4" />
               </button>

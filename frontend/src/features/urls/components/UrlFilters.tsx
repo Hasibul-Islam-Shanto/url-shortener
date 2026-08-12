@@ -2,6 +2,9 @@ import { SearchInput } from '@/components/ui/SearchInput';
 import { SORT_FIELDS, STATUS_FILTERS } from '@/utils/constants';
 import type { UrlListParams, UrlStatus } from '../types';
 
+const selectClassName =
+  'h-10 rounded-full border border-white/10 bg-white/5 px-3 text-sm text-slate-200 backdrop-blur-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:shadow-glowSm';
+
 interface UrlFiltersProps {
   params: UrlListParams;
   onSearchChange: (search: string) => void;
@@ -22,11 +25,11 @@ export function UrlFilters({ params, onSearchChange, onStatusChange, onSortChang
         className="sm:max-w-xs"
       />
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <select
           value={params.status ?? ''}
           onChange={(e) => onStatusChange(e.target.value as UrlStatus | '')}
-          className="h-10 rounded-md border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+          className={selectClassName}
         >
           <option value="">All statuses</option>
           {STATUS_FILTERS.map((s) => (
@@ -39,7 +42,7 @@ export function UrlFilters({ params, onSearchChange, onStatusChange, onSortChang
         <select
           value={sortField}
           onChange={(e) => onSortChange(`${e.target.value}:${sortDirection}`)}
-          className="h-10 rounded-md border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+          className={selectClassName}
         >
           {SORT_FIELDS.map((f) => (
             <option key={f.value} value={f.value}>
@@ -51,7 +54,7 @@ export function UrlFilters({ params, onSearchChange, onStatusChange, onSortChang
         <select
           value={sortDirection}
           onChange={(e) => onSortChange(`${sortField}:${e.target.value}`)}
-          className="h-10 rounded-md border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+          className={selectClassName}
         >
           <option value="desc">Desc</option>
           <option value="asc">Asc</option>

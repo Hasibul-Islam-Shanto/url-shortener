@@ -12,16 +12,21 @@ export function UrlCreatePage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Create a short URL</h1>
+      <div>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Create a short URL</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Paste a long link and get a short, shareable URL instantly.
+        </p>
+      </div>
 
       {!createdUrl && (
-        <Card>
+        <Card className="shadow-glow-sm">
           <CreateUrlForm onCreated={setCreatedUrl} />
         </Card>
       )}
 
       {createdUrl && (
-        <Card className="space-y-4 text-center">
+        <Card className="animate-fade-in-up space-y-4 text-center shadow-glow-sm">
           <CheckCircle2 className="mx-auto h-10 w-10 text-green-600 dark:text-green-400" />
           <div>
             <p className="font-medium text-gray-900 dark:text-gray-100">Short URL created!</p>
