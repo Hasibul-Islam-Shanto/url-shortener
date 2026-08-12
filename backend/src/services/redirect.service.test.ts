@@ -3,15 +3,16 @@ import assert from 'node:assert/strict';
 import { Url } from '../models/url.model.js';
 import { Analytics } from '../models/analytics.model.js';
 import { resolveAndRegisterClick } from './redirect.service.js';
+import { flushAnalyticsQueue } from './analytics.service.js';
 
 const originalFindOne = Url.findOne;
 const originalFindOneAndUpdate = Url.findOneAndUpdate;
-const originalAnalyticsCreate = Analytics.create;
+const originalAnalyticsInsertMany = Analytics.insertMany;
 
 test.afterEach(() => {
   Url.findOne = originalFindOne;
   Url.findOneAndUpdate = originalFindOneAndUpdate;
-  Analytics.create = originalAnalyticsCreate;
+  Analytics.insertMany = originalAnalyticsInsertMany;
 });
 
 test('resolveAndRegisterClick rejects missing, disabled, and expired links', async () => {
@@ -40,7 +41,7 @@ test('resolveAndRegisterClick rejects missing, disabled, and expired links', asy
 test('resolveAndRegisterClick increments clicks and records analytics for valid links', async () => {
   let updateFilter: unknown;
   let updateOperation: { $inc: { clickCount: number }; $set: { lastClickedAt: Date } } | undefined;
-  let analyticsPayload: { url: string; ipAddress?: string; referrer: string } | undefined;
+  let analyticsPayload: { url: string; ipHash?: string; referrer: string } | undefined;
 
   Url.findOne = (async (filter: { shortCode: string }) => ({
     _id: 'url-id',
@@ -54,9 +55,9 @@ test('resolveAndRegisterClick increments clicks and records analytics for valid 
     updateOperation = operation;
     return { _id: 'url-id', originalUrl: 'https://example.com' };
   }) as never;
-  Analytics.create = (async (payload: { url: string; ipAddress?: string; referrer: string }) => {
-    analyticsPayload = payload;
-    return payload;
+  Analytics.insertMany = (async (payloads: Array<{ url: string; ipHash?: string; referrer: string }>) => {
+    analyticsPayload = payloads[0];
+    return payloads;
   }) as never;
 
   const result = await resolveAndRegisterClick('abc123', {
@@ -69,7 +70,11 @@ test('resolveAndRegisterClick increments clicks and records analytics for valid 
   assert.deepEqual(updateFilter, { _id: 'url-id' });
   assert.equal(updateOperation?.$inc.clickCount, 1);
   assert.ok(updateOperation?.$set.lastClickedAt instanceof Date);
+
+  await flushAnalyticsQueue();
+
   assert.equal(analyticsPayload?.url, 'url-id');
-  assert.equal(analyticsPayload?.ipAddress, '127.0.0.1');
+  assert.equal(analyticsPayload?.ipHash?.length, 64);
+  assert.notEqual(analyticsPayload?.ipHash, '127.0.0.1');
   assert.equal(analyticsPayload?.referrer, 'https://referrer.example');
 });

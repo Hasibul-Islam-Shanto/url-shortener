@@ -58,7 +58,7 @@ backend/
     └── utils/              # Utility functions (short-code generation, etc.)
 ```
 
-**API overview** — all REST routes are under `/api`; the public redirect lives at the root.
+**API overview** — all REST routes are under `/api`; health checks and the public redirect live at the root.
 
 | Method | Endpoint                     | Auth | Description                         |
 | ------ | ---------------------------- | ---- | ----------------------------------- |
@@ -74,6 +74,9 @@ backend/
 | DELETE | `/api/urls/:id`              | Yes  | Delete a URL                        |
 | GET    | `/api/urls/:id/analytics`    | Yes  | Get analytics for a URL             |
 | GET    | `/api/dashboard`             | Yes  | Aggregate dashboard stats           |
+| GET    | `/healthz`                   | No   | Liveness check                      |
+| GET    | `/readyz`                    | No   | Readiness check, including MongoDB  |
+| GET    | `/metrics`                   | No   | JSON runtime counters and queue stats |
 | GET    | `/:shortCode`                | No   | 302 redirect + record a click       |
 
 ### Frontend (`frontend/`)
@@ -137,17 +140,26 @@ Backend environment variables (`backend/.env.example`):
 | Variable                | Example                                     | Notes                                  |
 | ----------------------- | ------------------------------------------- | -------------------------------------- |
 | `PORT`                  | `8000`                                      | Server port                            |
-| `NODE_ENV`              | `development`                               | Environment                            |
+| `NODE_ENV`              | `development`                               | `development`, `test`, or `production` |
 | `MONGODB_URI`           | `mongodb://localhost:27017/url-shortener`   | **Required**                           |
-| `JWT_SECRET`            | `replace-with-a-random-secret-at-least-32-characters` | **Required** — use a strong secret     |
-| `JWT_EXPIRES_IN`        | `7d`                                        | Token lifetime                         |
+| `JWT_SECRET`            | `replace-with-a-random-secret-at-least-32-characters` | **Required** — at least 32 characters |
+| `ANALYTICS_IP_SALT`     | `replace-with-a-random-analytics-salt-32chars` | Optional; defaults to `JWT_SECRET`, used to hash IPs |
+| `JWT_EXPIRES_IN`        | `7d`                                        | Token lifetime, e.g. `15m`, `12h`, `7d` |
 | `COOKIE_NAME`           | `token`                                     | Auth cookie name                       |
+| `CSRF_COOKIE_NAME`      | `csrfToken`                                 | CSRF cookie name; frontend expects this default |
 | `CLIENT_URL`            | `http://localhost:5173`                     | CORS origin (frontend)                 |
 | `BASE_URL`              | `http://localhost:8000`                     | Base used to build short URLs          |
+| `BLOCKED_REDIRECT_HOSTS`| `example.bad,phishing.test`                 | Comma-separated host blocklist         |
+| `ALLOWED_REDIRECT_HOSTS`| `example.com,docs.example.com`              | Optional comma-separated allowlist; when set, all other hosts are blocked |
+| `METRICS_TOKEN`         | `replace-with-random-token`                 | Optional token for `/metrics`; accepted as bearer token or `x-metrics-token` |
 | `RATE_LIMIT_WINDOW_MS`  | `900000`                                    | General rate-limit window (15 min)     |
 | `RATE_LIMIT_MAX`        | `100`                                       | Max requests per window                |
 | `AUTH_RATE_LIMIT_MAX`   | `10`                                        | Max auth requests per window           |
-| `SHORT_CODE_LENGTH`     | `7`                                         | Generated short-code length            |
+| `ANALYTICS_RETENTION_DAYS` | `90`                                     | TTL retention for click analytics; `0` disables TTL |
+| `ANALYTICS_QUEUE_MAX_SIZE` | `5000`                                  | Max in-memory analytics events before oldest events are dropped |
+| `ANALYTICS_FLUSH_INTERVAL_MS` | `5000`                              | Analytics queue flush interval         |
+| `ANALYTICS_BATCH_SIZE`  | `100`                                       | Max analytics events per insert batch  |
+| `SHORT_CODE_LENGTH`     | `7`                                         | Generated short-code length, 3-30 chars |
 | `TRUST_PROXY`           | `false`                                     | Set `true` behind a reverse proxy      |
 
 ### 2. Frontend
@@ -160,6 +172,20 @@ npm run dev                 # http://localhost:5173
 ```
 
 Other scripts: `npm run build` (typecheck + production build to `dist/`), `npm run preview`, `npm run lint`.
+
+---
+
+## Verification
+
+Run these before opening a PR or deploying:
+
+```bash
+cd backend && npm run check
+cd frontend && npm run check
+JWT_SECRET="$(openssl rand -hex 32)" docker compose config
+```
+
+The backend test suite includes unit coverage plus an Express integration test for health checks, request IDs, auth cookies, CSRF protection, and protected URL creation. GitHub Actions runs backend checks, frontend checks, Compose validation, and Docker image builds on pushes to `main` and pull requests.
 
 Frontend environment variables (`frontend/.env.example`):
 
@@ -184,7 +210,7 @@ Each app has its own image, and `docker-compose.yml` wires them together with Mo
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY tsconfig*.json ./
 COPY src ./src
 RUN npm run build
@@ -193,7 +219,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 EXPOSE 8000
 CMD ["node", "dist/server.js"]
@@ -202,13 +228,13 @@ CMD ["node", "dist/server.js"]
 **Frontend** (`frontend/Dockerfile`) — a multi-stage build:
 
 1. **Builder stage** (`node:20-alpine`): installs deps and runs `npm run build`. Vite bakes the `VITE_*` values in at build time, so they are passed as build args (`VITE_API_BASE_URL`, `VITE_PUBLIC_BASE_URL`).
-2. **Runner stage** (`nginx:alpine`): copies the static `dist/` output into Nginx and applies `nginx/default.conf`, serving on port 80.
+2. **Runner stage** (`nginxinc/nginx-unprivileged:1.27-alpine`): copies the static `dist/` output into Nginx and applies `nginx/default.conf`, serving on port 8080 as an unprivileged user.
 
 ```dockerfile
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
 ARG VITE_API_BASE_URL
 ARG VITE_PUBLIC_BASE_URL
@@ -216,14 +242,14 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_PUBLIC_BASE_URL=$VITE_PUBLIC_BASE_URL
 RUN npm run build
 
-FROM nginx:alpine AS runner
+FROM nginxinc/nginx-unprivileged:1.27-alpine AS runner
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-Because the frontend is built with an empty `VITE_API_BASE_URL` under Compose, the browser makes **same-origin** requests to `/api/...`, and Nginx proxies them to the backend container (`http://backend:8000/api/`). This avoids CORS in the Docker setup.
+Because the frontend is built with an empty `VITE_API_BASE_URL` under Compose, the browser makes **same-origin** requests to `/api/...`, and Nginx proxies them to the backend container (`http://backend:8000/api/`). Nginx also proxies root-level short codes like `/abc123` to the backend while keeping SPA routes such as `/login` and `/urls` on the frontend. This avoids CORS in the Docker setup and lets copied short links use the same public origin as the app.
 
 ### How Docker Compose works
 
@@ -233,14 +259,14 @@ Because the frontend is built with an empty `VITE_API_BASE_URL` under Compose, t
 | ---------- | ---------------------- | ---------------- | ---------------------------------------- |
 | `mongo`    | `mongo:7`              | not exposed      | Database; data persisted in a volume     |
 | `backend`  | `./backend/Dockerfile` | `8000 → 8000`    | Express API                              |
-| `frontend` | `./frontend/Dockerfile`| `3001 → 80`      | Nginx serving the SPA + proxying `/api/` |
+| `frontend` | `./frontend/Dockerfile`| `3001 → 8080`    | Nginx serving the SPA + proxying `/api/` |
 
 Key details:
 
-- **Startup order:** `frontend` depends on `backend`, which depends on `mongo` (via `depends_on`).
+- **Startup order:** `frontend` waits for the backend health check, and the backend waits for MongoDB's health check.
 - **Networking:** All three share `url_shortener_net`. The backend reaches Mongo at `mongodb://mongo:27017/...` and Nginx reaches the API at `http://backend:8000` — using the Compose service names as hostnames.
 - **Persistence:** MongoDB data lives in the named volume `mongo-data` (`/data/db`), so it survives container restarts.
-- **Config:** The backend reads most settings from the `environment:` block in the Compose file. `JWT_SECRET` is intentionally required from your shell or root `.env` file, and Compose will fail fast if it is missing. The backend runs with `PORT=8000` and `TRUST_PROXY=false` in this local setup because the API port is published directly. The frontend receives its `VITE_*` values as build args.
+- **Config:** The backend reads most settings from the `environment:` block in the Compose file. `JWT_SECRET` is intentionally required from your shell or root `.env` file, and Compose will fail fast if it is missing. The backend runs with `NODE_ENV=production`, `PORT=8000`, and `TRUST_PROXY=true` behind the frontend Nginx proxy. The backend host port is bound to `127.0.0.1` for local inspection, while the frontend is the public entrypoint. The frontend receives its `VITE_*` values as build args.
 
 ### Run everything
 
@@ -255,8 +281,9 @@ Alternatively, create a git-ignored root `.env` file with `JWT_SECRET=...` befor
 Then open:
 
 - **Frontend UI:** http://localhost:3001
-- **Backend API:** http://localhost:8000
-- **Short links:** http://localhost:8000/{shortCode}
+- **Backend API:** http://localhost:3001/api
+- **Backend API, local inspection only:** http://localhost:8000
+- **Short links:** http://localhost:3001/{shortCode}
 
 Useful commands:
 

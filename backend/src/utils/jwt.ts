@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 
 export interface AppJwtPayload extends JwtPayload {
   id: string;
+  sessionId: string;
 }
 
 export function signToken(payload: AppJwtPayload) {

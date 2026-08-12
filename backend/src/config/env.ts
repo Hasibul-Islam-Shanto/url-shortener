@@ -1,33 +1,86 @@
 import dotenv from 'dotenv';
+import { z } from 'zod';
 
 dotenv.config();
 
-const required = ['MONGODB_URI', 'JWT_SECRET'];
+const optionalString = z.preprocess((value) => (value === '' ? undefined : value), z.string().optional());
 
-for (const key of required) {
-  if (!process.env[key]) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
+const envSchema = z.object({
+  PORT: z.coerce.number().int().positive().default(5000),
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+
+  MONGODB_URI: z.string().min(1, 'MONGODB_URI is required'),
+
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  ANALYTICS_IP_SALT: optionalString.pipe(z.string().min(32).optional()),
+  JWT_EXPIRES_IN: z.string().regex(/^\d+[smhd]$/, 'JWT_EXPIRES_IN must look like 15m, 12h, or 7d').default('7d'),
+  COOKIE_NAME: z.string().min(1).default('token'),
+  CSRF_COOKIE_NAME: z.string().min(1).default('csrfToken'),
+
+  CLIENT_URL: z.string().url().default('http://localhost:3000'),
+  BASE_URL: z.string().url().default('http://localhost:5000'),
+  BLOCKED_REDIRECT_HOSTS: z.string().default(''),
+  ALLOWED_REDIRECT_HOSTS: z.string().default(''),
+  METRICS_TOKEN: optionalString,
+
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+  AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
+
+  ANALYTICS_RETENTION_DAYS: z.coerce.number().int().nonnegative().default(90),
+  ANALYTICS_QUEUE_MAX_SIZE: z.coerce.number().int().positive().default(5000),
+  ANALYTICS_FLUSH_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
+  ANALYTICS_BATCH_SIZE: z.coerce.number().int().positive().default(100),
+
+  SHORT_CODE_LENGTH: z.coerce.number().int().min(3).max(30).default(7),
+  TRUST_PROXY: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+});
+
+const parsed = envSchema.safeParse(process.env);
+
+if (!parsed.success) {
+  const details = parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ');
+  throw new Error(`Invalid environment configuration: ${details}`);
 }
 
 export const env = {
-  port: Number(process.env.PORT) || 5000,
-  nodeEnv: process.env.NODE_ENV || 'development',
-  isProduction: process.env.NODE_ENV === 'production',
+  port: parsed.data.PORT,
+  nodeEnv: parsed.data.NODE_ENV,
+  isProduction: parsed.data.NODE_ENV === 'production',
 
-  mongodbUri: process.env.MONGODB_URI as string,
+  mongodbUri: parsed.data.MONGODB_URI,
 
-  jwtSecret: process.env.JWT_SECRET as string,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  cookieName: process.env.COOKIE_NAME || 'token',
+  jwtSecret: parsed.data.JWT_SECRET,
+  analyticsIpSalt: parsed.data.ANALYTICS_IP_SALT ?? parsed.data.JWT_SECRET,
+  jwtExpiresIn: parsed.data.JWT_EXPIRES_IN,
+  cookieName: parsed.data.COOKIE_NAME,
+  csrfCookieName: parsed.data.CSRF_COOKIE_NAME,
 
-  clientUrl: process.env.CLIENT_URL || 'http://localhost:3000',
-  baseUrl: process.env.BASE_URL || 'http://localhost:5000',
+  clientUrl: parsed.data.CLIENT_URL,
+  baseUrl: parsed.data.BASE_URL,
+  blockedRedirectHosts: parseCsv(parsed.data.BLOCKED_REDIRECT_HOSTS),
+  allowedRedirectHosts: parseCsv(parsed.data.ALLOWED_REDIRECT_HOSTS),
+  metricsToken: parsed.data.METRICS_TOKEN,
 
-  rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  rateLimitMax: Number(process.env.RATE_LIMIT_MAX) || 100,
-  authRateLimitMax: Number(process.env.AUTH_RATE_LIMIT_MAX) || 10,
+  rateLimitWindowMs: parsed.data.RATE_LIMIT_WINDOW_MS,
+  rateLimitMax: parsed.data.RATE_LIMIT_MAX,
+  authRateLimitMax: parsed.data.AUTH_RATE_LIMIT_MAX,
 
-  shortCodeLength: Number(process.env.SHORT_CODE_LENGTH) || 7,
-  trustProxy: process.env.TRUST_PROXY === 'true',
+  analyticsRetentionDays: parsed.data.ANALYTICS_RETENTION_DAYS,
+  analyticsQueueMaxSize: parsed.data.ANALYTICS_QUEUE_MAX_SIZE,
+  analyticsFlushIntervalMs: parsed.data.ANALYTICS_FLUSH_INTERVAL_MS,
+  analyticsBatchSize: parsed.data.ANALYTICS_BATCH_SIZE,
+
+  shortCodeLength: parsed.data.SHORT_CODE_LENGTH,
+  trustProxy: parsed.data.TRUST_PROXY,
 };
+
+function parseCsv(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}

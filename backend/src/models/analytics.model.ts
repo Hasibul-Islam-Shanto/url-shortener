@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
+import { env } from '../config/env.js';
 
 export interface AnalyticsAttrs {
   url: mongoose.Types.ObjectId;
   browser: string;
   operatingSystem: string;
   device: string;
-  ipAddress?: string;
+  ipHash?: string;
   referrer: string;
   visitedAt: Date;
 }
@@ -30,7 +31,7 @@ const analyticsSchema = new mongoose.Schema<AnalyticsAttrs>(
       type: String,
       default: 'desktop',
     },
-    ipAddress: {
+    ipHash: {
       type: String,
     },
     referrer: {
@@ -46,5 +47,8 @@ const analyticsSchema = new mongoose.Schema<AnalyticsAttrs>(
 );
 
 analyticsSchema.index({ url: 1, visitedAt: -1 });
+if (env.analyticsRetentionDays > 0) {
+  analyticsSchema.index({ visitedAt: 1 }, { expireAfterSeconds: env.analyticsRetentionDays * 24 * 60 * 60 });
+}
 
 export const Analytics = mongoose.model<AnalyticsAttrs>('Analytics', analyticsSchema);

@@ -4,7 +4,7 @@ export interface AnalyticsVisit {
   browser: string;
   operatingSystem: string;
   device: string;
-  ipAddress: string;
+  ipHash?: string;
   referrer: string;
   visitedAt: string;
 }

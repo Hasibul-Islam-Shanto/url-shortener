@@ -1,8 +1,9 @@
 import { ApiError } from '../utils/ApiError.js';
 import { env } from '../config/env.js';
+import { logger } from '../utils/logger.js';
 import type { ErrorRequestHandler } from 'express';
 
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   let statusCode = err instanceof ApiError ? err.statusCode : 500;
   let message = err.message || 'Internal server error';
   let errors = err instanceof ApiError ? err.errors : [];
@@ -28,7 +29,11 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   }
 
   if (!err.isOperational && statusCode === 500) {
-    console.error(err);
+    logger.error('unhandled_error', {
+      requestId: req.requestId,
+      error: err instanceof Error ? err.message : String(err),
+      stack: env.nodeEnv === 'development' && err instanceof Error ? err.stack : undefined,
+    });
   }
 
   res.status(statusCode).json({

@@ -1,6 +1,10 @@
+import crypto from 'node:crypto';
 import { User } from '../models/user.model.js';
+import { AuthSession } from '../models/session.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { signToken } from '../utils/jwt.js';
+import { env } from '../config/env.js';
+import { parseDurationToMs } from '../utils/duration.js';
 
 interface RegisterUserInput {
   name: string;
@@ -25,7 +29,7 @@ export async function registerUser({ name, email, password }: RegisterUserInput)
   }
 
   const user = await User.create({ name, email, password });
-  const token = signToken({ id: user._id.toString() });
+  const token = await createSessionToken(user._id.toString());
 
   return { user, token };
 }
@@ -37,9 +41,13 @@ export async function loginUser({ email, password }: LoginUserInput) {
     throw new ApiError(401, 'Invalid credentials');
   }
 
-  const token = signToken({ id: user._id.toString() });
+  const token = await createSessionToken(user._id.toString());
 
   return { user, token };
+}
+
+export async function revokeSession(tokenId: string) {
+  await AuthSession.updateOne({ tokenId, revokedAt: null }, { $set: { revokedAt: new Date() } });
 }
 
 export async function getProfile(userId: string) {
@@ -65,4 +73,17 @@ export async function updateProfile(userId: string, { name, avatar }: UpdateProf
   }
 
   return user;
+}
+
+async function createSessionToken(userId: string) {
+  const tokenId = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + parseDurationToMs(env.jwtExpiresIn));
+
+  await AuthSession.create({
+    tokenId,
+    user: userId,
+    expiresAt,
+  });
+
+  return signToken({ id: userId, sessionId: tokenId });
 }

@@ -1,6 +1,7 @@
 import { Url } from '../models/url.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { recordVisit } from './analytics.service.js';
+import { incrementMetric } from './metrics.service.js';
 
 interface RequestMetadata {
   userAgent?: string;
@@ -33,11 +34,8 @@ export async function resolveAndRegisterClick(shortCode: string, { userAgent, ip
     throw new ApiError(404, 'Short URL not found');
   }
 
-  try {
-    await recordVisit(updated._id.toString(), { userAgent, ip, referrer });
-  } catch (err) {
-    console.error('Failed to record analytics visit:', err);
-  }
+  recordVisit(updated._id.toString(), { userAgent, ip, referrer });
+  incrementMetric('redirectsTotal');
 
   return { originalUrl: updated.originalUrl };
 }

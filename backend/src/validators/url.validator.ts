@@ -1,12 +1,14 @@
 import { z } from 'zod';
 import { ALLOWED_SORT_FIELDS } from './common.validator.js';
+import { isAllowedRedirectUrl, isReservedShortCode } from '../utils/urlPolicy.js';
 
 const shortCodeSchema = z
   .string()
   .trim()
   .min(3)
   .max(30)
-  .regex(/^[a-zA-Z0-9_-]+$/, 'Short code may only contain letters, numbers, hyphens, and underscores');
+  .regex(/^[a-zA-Z0-9_-]+$/, 'Short code may only contain letters, numbers, hyphens, and underscores')
+  .refine((value) => !isReservedShortCode(value), 'This short code is reserved');
 
 const httpUrlSchema = z
   .string()
@@ -14,6 +16,9 @@ const httpUrlSchema = z
   .url()
   .refine((value) => ['http:', 'https:'].includes(new URL(value).protocol), {
     message: 'URL must use http or https',
+  })
+  .refine(isAllowedRedirectUrl, {
+    message: 'URL destination is not allowed',
   });
 
 const futureDateSchema = z

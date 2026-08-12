@@ -8,6 +8,25 @@ export const axiosClient = axios.create({
   withCredentials: true,
 });
 
+function readCookie(name: string) {
+  return document.cookie
+    .split('; ')
+    .find((cookie) => cookie.startsWith(`${name}=`))
+    ?.split('=')
+    .slice(1)
+    .join('=');
+}
+
+axiosClient.interceptors.request.use((config) => {
+  const csrfToken = readCookie('csrfToken');
+
+  if (csrfToken) {
+    config.headers.set('x-csrf-token', decodeURIComponent(csrfToken));
+  }
+
+  return config;
+});
+
 axiosClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiErrorResponse>) => {

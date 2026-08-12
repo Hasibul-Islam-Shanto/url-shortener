@@ -29,34 +29,42 @@ interface UpdateUrlInput {
 }
 
 export async function createShortUrl(userId: string, { originalUrl, shortCode, expiresAt }: CreateShortUrlInput) {
-  let code = shortCode;
-
-  if (code) {
-    const existing = await Url.findOne({ shortCode: code });
+  if (shortCode) {
+    const existing = await Url.findOne({ shortCode });
     if (existing) {
       throw new ApiError(409, 'This short code is already taken');
     }
-  } else {
-    for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt += 1) {
-      const candidate = generateShortCode();
-      // eslint-disable-next-line no-await-in-loop
-      const existing = await Url.findOne({ shortCode: candidate });
-      if (!existing) {
-        code = candidate;
-        break;
+
+    try {
+      return await Url.create({
+        originalUrl,
+        shortCode,
+        user: userId,
+        expiresAt: expiresAt ?? null,
+      });
+    } catch (err) {
+      if (isDuplicateShortCodeError(err)) {
+        throw new ApiError(409, 'This short code is already taken');
       }
-    }
-    if (!code) {
-      throw new ApiError(500, 'Failed to generate a unique short code, please try again');
+      throw err;
     }
   }
 
-  return Url.create({
-    originalUrl,
-    shortCode: code,
-    user: userId,
-    expiresAt: expiresAt ?? null,
-  });
+  for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt += 1) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      return await Url.create({
+        originalUrl,
+        shortCode: generateShortCode(),
+        user: userId,
+        expiresAt: expiresAt ?? null,
+      });
+    } catch (err) {
+      if (!isDuplicateShortCodeError(err)) throw err;
+    }
+  }
+
+  throw new ApiError(500, 'Failed to generate a unique short code, please try again');
 }
 
 export async function listUrls(userId: string, { page, limit, sort, status, search }: ListUrlsInput) {
@@ -128,4 +136,15 @@ export async function deleteUrl(userId: string, urlId: string) {
   const url = await getUrlById(userId, urlId);
   await Analytics.deleteMany({ url: url._id });
   await url.deleteOne();
+}
+
+function isDuplicateShortCodeError(err: unknown) {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'code' in err &&
+    (err as { code?: number }).code === 11000 &&
+    'keyPattern' in err &&
+    Boolean((err as { keyPattern?: { shortCode?: number } }).keyPattern?.shortCode)
+  );
 }
