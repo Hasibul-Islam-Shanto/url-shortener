@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useAuth } from '@/store/AuthContext';
+import { useAuth } from '@/store/useAuth';
 import { registerSchema, type RegisterFormValues } from '../schemas/auth.schema';
 import { FormField } from '@/components/FormField';
 import { Input } from '@/components/ui/Input';

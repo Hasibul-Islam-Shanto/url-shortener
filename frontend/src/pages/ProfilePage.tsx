@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/Card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ProfileForm } from '@/features/profile/components/ProfileForm';
-import { useAuth } from '@/store/AuthContext';
+import { useAuth } from '@/store/useAuth';
 
 export function ProfilePage() {
   const { user, isLoading } = useAuth();

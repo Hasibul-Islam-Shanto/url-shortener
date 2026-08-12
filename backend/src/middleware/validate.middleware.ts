@@ -1,7 +1,11 @@
 import { ApiError } from '../utils/ApiError.js';
+import type { NextFunction, Request, Response } from 'express';
+import type { ZodTypeAny } from 'zod';
 
-export function validate(schema, source = 'body') {
-  return (req, _res, next) => {
+type RequestSource = 'body' | 'query' | 'params';
+
+export function validate(schema: ZodTypeAny, source: RequestSource = 'body') {
+  return (req: Request, _res: Response, next: NextFunction) => {
     const result = schema.safeParse(req[source]);
 
     if (!result.success) {

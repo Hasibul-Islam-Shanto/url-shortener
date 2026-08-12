@@ -3,8 +3,9 @@ import { ApiError } from '../utils/ApiError.js';
 import { env } from '../config/env.js';
 import { User } from '../models/user.model.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import type { RequestHandler } from 'express';
 
-export const protect = asyncHandler(async (req, _res, next) => {
+export const protect: RequestHandler = asyncHandler(async (req, _res, next) => {
   const token = req.cookies?.[env.cookieName];
 
   if (!token) {

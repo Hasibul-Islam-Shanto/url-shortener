@@ -34,7 +34,7 @@ url-shortener/
 
 ### Backend (`backend/`)
 
-Express API using ES modules. Entry point is `src/server.js`, which boots the app defined in `src/app.js`.
+Express API written in TypeScript and compiled to `dist/`. The source entry point is `src/server.ts`, which boots the app defined in `src/app.ts`; production runs `dist/server.js`.
 
 ```
 backend/
@@ -42,9 +42,11 @@ backend/
 ├── .dockerignore
 ├── .env.example            # Copy to .env for local dev
 ├── package.json
+├── tsconfig.json           # Typecheck config
+├── tsconfig.build.json     # Production build config
 └── src/
-    ├── server.js           # Starts the HTTP server, connects to MongoDB
-    ├── app.js              # Express app: middleware + route mounting
+    ├── server.ts           # Starts the HTTP server, connects to MongoDB
+    ├── app.ts              # Express app: middleware + route mounting
     ├── config/             # Env parsing/validation, DB connection
     ├── controllers/        # Request handlers
     ├── services/           # Business logic
@@ -125,10 +127,10 @@ frontend/
 cd backend
 npm install
 cp .env.example .env        # edit values as needed
-npm run dev                 # http://localhost:8000 (nodemon, hot reload)
+npm run dev                 # http://localhost:8000 (tsx watch)
 ```
 
-For production: `npm start`.
+For production: `npm run build && npm start`. Other scripts: `npm run lint` (TypeScript typecheck), `npm test`.
 
 Backend environment variables (`backend/.env.example`):
 
@@ -137,7 +139,7 @@ Backend environment variables (`backend/.env.example`):
 | `PORT`                  | `8000`                                      | Server port                            |
 | `NODE_ENV`              | `development`                               | Environment                            |
 | `MONGODB_URI`           | `mongodb://localhost:27017/url-shortener`   | **Required**                           |
-| `JWT_SECRET`            | `changeme`                                  | **Required** — use a strong secret     |
+| `JWT_SECRET`            | `replace-with-a-random-secret-at-least-32-characters` | **Required** — use a strong secret     |
 | `JWT_EXPIRES_IN`        | `7d`                                        | Token lifetime                         |
 | `COOKIE_NAME`           | `token`                                     | Auth cookie name                       |
 | `CLIENT_URL`            | `http://localhost:5173`                     | CORS origin (frontend)                 |
@@ -176,16 +178,25 @@ Each app has its own image, and `docker-compose.yml` wires them together with Mo
 
 ### How the images are built
 
-**Backend** (`backend/Dockerfile`) — a single-stage Node 20 Alpine image. It installs production dependencies only (`npm install --omit=dev`), copies `src/`, and runs `node src/server.js`.
+**Backend** (`backend/Dockerfile`) — a multi-stage Node 20 Alpine image. The builder installs all dependencies and compiles TypeScript; the runner installs production dependencies only, copies `dist/`, and runs `node dist/server.js`.
 
 ```dockerfile
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm install
+COPY tsconfig*.json ./
 COPY src ./src
-EXPOSE 5000
-CMD ["node", "src/server.js"]
+RUN npm run build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm install --omit=dev
+COPY --from=builder /app/dist ./dist
+EXPOSE 8000
+CMD ["node", "dist/server.js"]
 ```
 
 **Frontend** (`frontend/Dockerfile`) — a multi-stage build:
@@ -229,15 +240,17 @@ Key details:
 - **Startup order:** `frontend` depends on `backend`, which depends on `mongo` (via `depends_on`).
 - **Networking:** All three share `url_shortener_net`. The backend reaches Mongo at `mongodb://mongo:27017/...` and Nginx reaches the API at `http://backend:8000` — using the Compose service names as hostnames.
 - **Persistence:** MongoDB data lives in the named volume `mongo-data` (`/data/db`), so it survives container restarts.
-- **Config:** The backend reads its environment from the `environment:` block in the Compose file (not from `.env`), and runs with `PORT=8000` and `TRUST_PROXY=true`. The frontend receives its `VITE_*` values as build args.
+- **Config:** The backend reads most settings from the `environment:` block in the Compose file. `JWT_SECRET` is intentionally required from your shell or root `.env` file, and Compose will fail fast if it is missing. The backend runs with `PORT=8000` and `TRUST_PROXY=false` in this local setup because the API port is published directly. The frontend receives its `VITE_*` values as build args.
 
 ### Run everything
 
 From the repository root:
 
 ```bash
-docker compose up --build
+JWT_SECRET="$(openssl rand -hex 32)" docker compose up --build
 ```
+
+Alternatively, create a git-ignored root `.env` file with `JWT_SECRET=...` before running Compose.
 
 Then open:
 

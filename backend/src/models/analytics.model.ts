@@ -1,6 +1,16 @@
 import mongoose from 'mongoose';
 
-const analyticsSchema = new mongoose.Schema(
+export interface AnalyticsAttrs {
+  url: mongoose.Types.ObjectId;
+  browser: string;
+  operatingSystem: string;
+  device: string;
+  ipAddress?: string;
+  referrer: string;
+  visitedAt: Date;
+}
+
+const analyticsSchema = new mongoose.Schema<AnalyticsAttrs>(
   {
     url: {
       type: mongoose.Schema.Types.ObjectId,
@@ -37,4 +47,4 @@ const analyticsSchema = new mongoose.Schema(
 
 analyticsSchema.index({ url: 1, visitedAt: -1 });
 
-export const Analytics = mongoose.model('Analytics', analyticsSchema);
+export const Analytics = mongoose.model<AnalyticsAttrs>('Analytics', analyticsSchema);

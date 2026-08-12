@@ -2,7 +2,13 @@ import { Url } from '../models/url.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { recordVisit } from './analytics.service.js';
 
-export async function resolveAndRegisterClick(shortCode, { userAgent, ip, referrer }) {
+interface RequestMetadata {
+  userAgent?: string;
+  ip?: string;
+  referrer?: string;
+}
+
+export async function resolveAndRegisterClick(shortCode: string, { userAgent, ip, referrer }: RequestMetadata) {
   const url = await Url.findOne({ shortCode });
 
   if (!url) {
@@ -23,8 +29,12 @@ export async function resolveAndRegisterClick(shortCode, { userAgent, ip, referr
     { new: true }
   );
 
+  if (!updated) {
+    throw new ApiError(404, 'Short URL not found');
+  }
+
   try {
-    await recordVisit(updated._id, { userAgent, ip, referrer });
+    await recordVisit(updated._id.toString(), { userAgent, ip, referrer });
   } catch (err) {
     console.error('Failed to record analytics visit:', err);
   }

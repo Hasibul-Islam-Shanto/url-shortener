@@ -9,7 +9,7 @@ const EMPTY_COUNTS = {
   disabledUrls: 0,
 };
 
-export async function getDashboardStats(userId) {
+export async function getDashboardStats(userId: string) {
   const [result] = await Url.aggregate([
     { $match: { user: new mongoose.Types.ObjectId(userId) } },
     {

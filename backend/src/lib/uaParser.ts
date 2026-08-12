@@ -1,6 +1,6 @@
 import { UAParser } from 'ua-parser-js';
 
-export function parseUserAgent(uaString) {
+export function parseUserAgent(uaString?: string) {
   const result = new UAParser(uaString || '').getResult();
 
   return {

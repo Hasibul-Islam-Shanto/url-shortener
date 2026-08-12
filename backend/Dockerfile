@@ -1,13 +1,28 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --omit=dev
+RUN npm install
 
+COPY tsconfig*.json ./
 COPY src ./src
 
-EXPOSE 5000
+RUN npm run build
 
-CMD ["node", "src/server.js"]
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY package*.json ./
+
+RUN npm install --omit=dev
+
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 8000
+
+CMD ["node", "dist/server.js"]

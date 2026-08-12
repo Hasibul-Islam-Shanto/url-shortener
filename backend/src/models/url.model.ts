@@ -1,6 +1,18 @@
-import mongoose from 'mongoose';
+import mongoose, { type HydratedDocument, type Types } from 'mongoose';
 
-const urlSchema = new mongoose.Schema(
+export interface UrlAttrs {
+  originalUrl: string;
+  shortCode: string;
+  user: Types.ObjectId;
+  clickCount: number;
+  isActive: boolean;
+  expiresAt?: Date | null;
+  lastClickedAt?: Date | null;
+}
+
+export type UrlDocument = HydratedDocument<UrlAttrs>;
+
+const urlSchema = new mongoose.Schema<UrlAttrs>(
   {
     originalUrl: {
       type: String,
@@ -43,9 +55,9 @@ urlSchema.index({ user: 1, createdAt: -1 });
 
 urlSchema.set('toJSON', {
   transform: (_doc, ret) => {
-    delete ret.__v;
+    delete (ret as { __v?: number }).__v;
     return ret;
   },
 });
 
-export const Url = mongoose.model('Url', urlSchema);
+export const Url = mongoose.model<UrlAttrs>('Url', urlSchema);
