@@ -10,7 +10,7 @@
     "prebuild": "node -e \"fs=require('node:fs');fs.rmSync('dist',{recursive:true,force:true})\"",
     "build": "tsc -p tsconfig.build.json",
     "lint": "tsc --noEmit",
-    "test": "NODE_ENV=test MONGODB_URI=mongodb://localhost:27017/url-shortener-test JWT_SECRET=test-secret-at-least-32-characters-long node --import tsx --test \"src/**/*.test.ts\"",
+    "test": "node scripts/run-tests.mjs",
     "check": "npm run lint && npm test && npm run build"
   },
   "dependencies": {
